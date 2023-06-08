@@ -1,0 +1,99 @@
+---
+title: "sc_prereg_1b_v2"
+output: html_notebook
+date: "2023-05-30"
+---
+
+```{r}
+library(tidyverse)
+df.sc.2 <- read.csv("/Users/libbyrouffy/Downloads/prereg_1b_v2.csv", header = T)
+
+df.sc.2 <- df.sc.2 |>
+  select(id,
+         age,
+         gender,
+         condition = Condition,
+         exclude = exclude.,
+         peek = peeked.,
+         time = time.) |>
+  filter(exclude == 0) |>
+  mutate(condition = ifelse(condition == 0, "Other", "Self"))
+
+df.sc.2 <- df.sc.2 |> 
+  mutate(time = as.numeric(ifelse(time == "n/a", 180,
+                       time)),
+         peek = as.numeric(ifelse(peek == "1", 1, 0)))
+
+```
+
+
+```{r}
+
+group.colors <- c(Self = "#ffc425", Other = "#00b159")
+
+plot1 <- ggplot (data = df.sc.2,
+        mapping = aes(x = condition,
+                      y = peek,
+                      color = condition)) +
+  geom_jitter(height = 0,
+              width = .4,
+              alpha = .3,
+              size = 3) +
+  stat_summary(fun.data = "mean_cl_boot",
+               size = 1.5,
+               geom = "pointrange") +
+  scale_color_manual(values=group.colors) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.title.y = element_text(margin = margin(r = 20),
+                                    size = 28),
+        axis.title.x = element_text(margin = margin(t = 20),
+                                    size = 28),
+        axis.text.x = element_text(size = 24),
+        axis.text.y = element_text(size = 20)) + 
+  labs(y = "Proportion peeking",
+       x = "Condition")
+
+``` 
+
+```{r}
+
+plot2 <- ggplot (data = df.sc.2,
+        mapping = aes(x = condition,
+                      y = time,
+                      color = condition)) +
+  geom_jitter(height = 0,
+              width = .4,
+              alpha = .3,
+              size = 3) +
+  stat_summary(fun.data = "mean_cl_boot",
+               size = 1.5,
+               geom = "pointrange") +
+  scale_color_manual(values=group.colors) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.title.y = element_text(margin = margin(r = 20),
+                                    size = 28),
+        axis.title.x = element_text(margin = margin(t = 20),
+                                    size = 28),
+        axis.text.x = element_text(size = 24),
+        axis.text.y = element_text(size = 20)) + 
+  labs(y = "Time to peek at folder (sec)",
+       x = "Condition")
+
+```
+
+```{r}
+
+library(cowplot)
+combined_plot <- plot_grid(plot1, plot2, ncol=2)
+print(combined_plot)
+
+```
+```{r}
+
+ggsave("combined_plot.pdf", combined_plot, width = 14, height = 7, units = "in")
+
+```
+
+
